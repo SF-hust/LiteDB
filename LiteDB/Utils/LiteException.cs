@@ -2,7 +2,6 @@
 using System;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB
@@ -66,19 +65,19 @@ namespace LiteDB
         public LiteException(int code, string message)
             : base(message)
         {
-            this.ErrorCode = code;
+            ErrorCode = code;
         }
 
         internal LiteException(int code, string message, params object[] args)
             : base(string.Format(message, args))
         {
-            this.ErrorCode = code;
+            ErrorCode = code;
         }
 
         internal LiteException (int code, Exception inner, string message, params object[] args)
         : base (string.Format (message, args), inner)
         {
-            this.ErrorCode = code;
+            ErrorCode = code;
         }
 
         #endregion

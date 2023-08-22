@@ -37,7 +37,7 @@ namespace LiteDB.Engine
         public override long Position
         {
             get => _stream.Position - PAGE_SIZE;
-            set => this.Seek(value, SeekOrigin.Begin);
+            set => Seek(value, SeekOrigin.Begin);
         }
 
         public long StreamPosition => _stream.Position;
@@ -57,15 +57,15 @@ namespace LiteDB.Engine
                 // new file? create new salt
                 if (isNew)
                 {
-                    this.Salt = NewSalt();
+                    Salt = NewSalt();
 
                     // first byte =1 means this datafile is encrypted
                     _stream.WriteByte(1);
-                    _stream.Write(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+                    _stream.Write(Salt, 0, ENCRYPTION_SALT_SIZE);
                 }
                 else
                 {
-                    this.Salt = new byte[ENCRYPTION_SALT_SIZE];
+                    Salt = new byte[ENCRYPTION_SALT_SIZE];
 
                     // checks if this datafile are encrypted
                     var isEncrypted = _stream.ReadByte();
@@ -75,14 +75,14 @@ namespace LiteDB.Engine
                         throw LiteException.FileNotEncrypted();
                     }
 
-                    _stream.Read(this.Salt, 0, ENCRYPTION_SALT_SIZE);
+                    _stream.Read(Salt, 0, ENCRYPTION_SALT_SIZE);
                 }
 
                 _aes = Aes.Create();
                 _aes.Padding = PaddingMode.None;
                 _aes.Mode = CipherMode.ECB;
 
-                var pdb = new Rfc2898DeriveBytes(password, this.Salt);
+                var pdb = new Rfc2898DeriveBytes(password, Salt);
 
                 using (pdb as IDisposable)
                 {
@@ -161,14 +161,14 @@ namespace LiteDB.Engine
         public override int Read(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
+            ENSURE(Position % PAGE_SIZE == 0, $"AesRead: position must be in PAGE_SIZE module. Position={Position}, File={_name}");
 
             var r = _reader.Read(array, offset, count);
 
             // checks if the first 16 bytes of the page in the original stream are zero
             // this should never happen, but if it does, return a blank page
             // the blank page will be skipped by WalIndexService.CheckpointInternal() and WalIndexService.RestoreIndex()
-            if (this.IsBlank(array, offset))
+            if (IsBlank(array, offset))
             {
                 array.Fill(0, offset, count);
             }
@@ -182,7 +182,7 @@ namespace LiteDB.Engine
         public override void Write(byte[] array, int offset, int count)
         {
             ENSURE(count == PAGE_SIZE, "buffer size must be PAGE_SIZE");
-            ENSURE(this.Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={this.Position}, File={_name}");
+            ENSURE(Position % PAGE_SIZE == 0, $"AesWrite: position must be in PAGE_SIZE module. Position={Position}, File={_name}");
 
             _writer.Write(array, offset, count);
         }

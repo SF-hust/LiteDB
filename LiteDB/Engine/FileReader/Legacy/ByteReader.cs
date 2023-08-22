@@ -1,7 +1,5 @@
-﻿using LiteDB.Engine;
-using System;
+﻿using System;
 using System.Text;
-using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -120,7 +118,7 @@ namespace LiteDB
 
         public string ReadString()
         {
-            var length = this.ReadInt32();
+            var length = ReadInt32();
             var str = Encoding.UTF8.GetString(_buffer, _pos, length);
             _pos += length;
 
@@ -140,7 +138,7 @@ namespace LiteDB
         /// </summary>
         public string ReadBsonString()
         {
-            var length = this.ReadInt32();
+            var length = ReadInt32();
             var str = Encoding.UTF8.GetString(_buffer, _pos, length - 1);
             _pos += length;
 
@@ -175,19 +173,19 @@ namespace LiteDB
             // fix #921 converting index key into LocalTime
             // this is not best solution because uctDate must be a global parameter
             // this will be review in v5
-            var date = new DateTime(this.ReadInt64(), DateTimeKind.Utc);
+            var date = new DateTime(ReadInt64(), DateTimeKind.Utc);
 
             return date.ToLocalTime();
         }
 
         public Guid ReadGuid()
         {
-            return new Guid(this.ReadBytes(16));
+            return new Guid(ReadBytes(16));
         }
 
         public ObjectId ReadObjectId()
         {
-            return new ObjectId(this.ReadBytes(12));
+            return new ObjectId(ReadBytes(12));
         }
 
         // Legacy PageAddress structure: [uint, ushort]
@@ -198,28 +196,28 @@ namespace LiteDB
 
         public BsonValue ReadBsonValue(ushort length)
         {
-            var type = (BsonType)this.ReadByte();
+            var type = (BsonType)ReadByte();
 
             switch (type)
             {
                 case BsonType.Null: return BsonValue.Null;
 
-                case BsonType.Int32: return this.ReadInt32();
-                case BsonType.Int64: return this.ReadInt64();
-                case BsonType.Double: return this.ReadDouble();
-                case BsonType.Decimal: return this.ReadDecimal();
+                case BsonType.Int32: return ReadInt32();
+                case BsonType.Int64: return ReadInt64();
+                case BsonType.Double: return ReadDouble();
+                case BsonType.Decimal: return ReadDecimal();
 
-                case BsonType.String: return this.ReadString(length);
+                case BsonType.String: return ReadString(length);
 
                 case BsonType.Document: return new BsonReader(false).ReadDocument(this);
                 case BsonType.Array: return new BsonReader(false).ReadArray(this);
 
-                case BsonType.Binary: return this.ReadBytes(length);
-                case BsonType.ObjectId: return this.ReadObjectId();
-                case BsonType.Guid: return this.ReadGuid();
+                case BsonType.Binary: return ReadBytes(length);
+                case BsonType.ObjectId: return ReadObjectId();
+                case BsonType.Guid: return ReadGuid();
 
-                case BsonType.Boolean: return this.ReadBoolean();
-                case BsonType.DateTime: return this.ReadDateTime();
+                case BsonType.Boolean: return ReadBoolean();
+                case BsonType.DateTime: return ReadDateTime();
 
                 case BsonType.MinValue: return BsonValue.MinValue;
                 case BsonType.MaxValue: return BsonValue.MaxValue;

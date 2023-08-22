@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Threading;
-using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -25,20 +20,20 @@ namespace LiteDB
                 (CompareOptions)Enum.Parse(typeof(CompareOptions), parts[1]) : 
                 CompareOptions.None;
 
-            this.LCID = LiteDB.LCID.GetLCID(culture);
-            this.SortOptions = sortOptions;
-            this.Culture = new CultureInfo(culture);
+            LCID = LiteDB.LCID.GetLCID(culture);
+            SortOptions = sortOptions;
+            Culture = new CultureInfo(culture);
 
-            _compareInfo = this.Culture.CompareInfo;
+            _compareInfo = Culture.CompareInfo;
         }
 
         public Collation(int lcid, CompareOptions sortOptions)
         {
-            this.LCID = lcid;
-            this.SortOptions = sortOptions;
-            this.Culture = LiteDB.LCID.GetCulture(lcid);
+            LCID = lcid;
+            SortOptions = sortOptions;
+            Culture = LiteDB.LCID.GetCulture(lcid);
 
-            _compareInfo = this.Culture.CompareInfo;
+            _compareInfo = Culture.CompareInfo;
         }
 
         public static Collation Default = new Collation(LiteDB.LCID.Current, CompareOptions.IgnoreCase);
@@ -65,7 +60,7 @@ namespace LiteDB
         /// </summary>
         public int Compare(string left, string right)
         {
-            var result = _compareInfo.Compare(left, right, this.SortOptions);
+            var result = _compareInfo.Compare(left, right, SortOptions);
 
             return result < 0 ? -1 : result > 0 ? +1 : 0;
         }
@@ -77,7 +72,7 @@ namespace LiteDB
 
         public bool Equals(BsonValue x, BsonValue y)
         {
-            return this.Compare(x, y) == 0;
+            return Compare(x, y) == 0;
         }
 
         public int GetHashCode(BsonValue obj)
@@ -87,7 +82,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.Culture.Name + "/" + this.SortOptions.ToString();
+            return Culture.Name + "/" + SortOptions.ToString();
         }
     }
 }

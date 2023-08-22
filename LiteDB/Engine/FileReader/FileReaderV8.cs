@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -39,7 +36,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes(string collection)
         {
-            var page = this.ReadPage<CollectionPage>(_collections[collection]);
+            var page = ReadPage<CollectionPage>(_collections[collection]);
 
             foreach(var index in page.GetCollectionIndexes().Where(x => x.Name != "_id"))
             {
@@ -59,7 +56,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> GetDocuments(string collection)
         {
-            var colPage = this.ReadPage<CollectionPage>(_collections[collection]);
+            var colPage = ReadPage<CollectionPage>(_collections[collection]);
 
             for (var slot = 0; slot < PAGE_FREE_LIST_SLOTS; slot++)
             {
@@ -67,11 +64,11 @@ namespace LiteDB.Engine
 
                 while (next != uint.MaxValue)
                 {
-                    var page = this.ReadPage<DataPage>(next);
+                    var page = ReadPage<DataPage>(next);
 
                     foreach (var block in page.GetBlocks().ToArray())
                     {
-                        using (var r = new BufferReader(this.ReadBlocks(block)))
+                        using (var r = new BufferReader(ReadBlocks(block)))
                         {
                             var doc = r.ReadDocument(null);
 
@@ -109,7 +106,7 @@ namespace LiteDB.Engine
         {
             while (address != PageAddress.Empty)
             {
-                var dataPage = this.ReadPage<DataPage>(address.PageID);
+                var dataPage = ReadPage<DataPage>(address.PageID);
 
                 var block = dataPage.GetBlock(address.Index);
 

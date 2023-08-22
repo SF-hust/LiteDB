@@ -45,7 +45,7 @@ namespace LiteDB.Engine
         {
             _segmentSizes = memorySegmentSizes;
 
-            this.Extend();
+            Extend();
         }
 
         #region Readable Pages
@@ -56,13 +56,13 @@ namespace LiteDB.Engine
         public PageBuffer GetReadablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
             // get dict key based on position/origin
-            var key = this.GetReadableKey(position, origin);
+            var key = GetReadableKey(position, origin);
 
             // try get from _readble dict or create new
             var page = _readable.GetOrAdd(key, (k) =>
             {
                 // get new page from _free pages (or extend)
-                var newPage = this.GetFreePage();
+                var newPage = GetFreePage();
 
                 newPage.Position = position;
                 newPage.Origin = origin;
@@ -111,10 +111,10 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetWritablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
-            var key = this.GetReadableKey(position, origin);
+            var key = GetReadableKey(position, origin);
 
             // write pages always contains a new buffer array
-            var writable = this.NewPage(position, origin);
+            var writable = NewPage(position, origin);
 
             // if requested page already in cache, just copy buffer and avoid load from stream
             if (_readable.TryGetValue(key, out var clean))
@@ -134,7 +134,7 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            return this.NewPage(long.MaxValue, FileOrigin.None);
+            return NewPage(long.MaxValue, FileOrigin.None);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace LiteDB.Engine
         /// </summary>
         private PageBuffer NewPage(long position, FileOrigin origin)
         {
-            var page = this.GetFreePage();
+            var page = GetFreePage();
 
             // set page position and page as writable
             page.Position = position;
@@ -174,7 +174,7 @@ namespace LiteDB.Engine
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable");
             ENSURE(page.Origin != FileOrigin.None, "page must have origin defined");
 
-            var key = this.GetReadableKey(page.Position, page.Origin);
+            var key = GetReadableKey(page.Position, page.Origin);
 
             // set page as not in use
             page.ShareCounter = 0;
@@ -202,7 +202,7 @@ namespace LiteDB.Engine
             ENSURE(page.Origin != FileOrigin.None, "page should be a source before move to readable");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before move to readable dict");
 
-            var key = this.GetReadableKey(page.Position, page.Origin);
+            var key = GetReadableKey(page.Position, page.Origin);
             var added = true;
 
             // no concurrency in writable page
@@ -232,7 +232,7 @@ namespace LiteDB.Engine
             // if page was not added into readable list, move page to free list
             if (added == false)
             {
-                this.DiscardPage(page);
+                DiscardPage(page);
             }
 
             // return page that are in _readable list
@@ -282,12 +282,12 @@ namespace LiteDB.Engine
                 // ensure only 1 single thread call extend method
                 lock(_free)
                 {
-                    if (_free.Count > 0) return this.GetFreePage();
+                    if (_free.Count > 0) return GetFreePage();
 
-                    this.Extend();
+                    Extend();
                 }
 
-                return this.GetFreePage();
+                return GetFreePage();
             }
         }
 
@@ -349,7 +349,7 @@ namespace LiteDB.Engine
             {
                 // create big linear array in heap memory (LOH => 85Kb)
                 var buffer = new byte[PAGE_SIZE * segmentSize];
-                var uniqueID = this.ExtendPages + 1;
+                var uniqueID = ExtendPages + 1;
 
                 // split linear array into many array slices
                 for (var i = 0; i < segmentSize; i++)
@@ -386,7 +386,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get how many pages are used as Writable at this moment
         /// </summary>
-        public int WritablePages => this.ExtendPages - // total memory
+        public int WritablePages => ExtendPages - // total memory
             _free.Count - _readable.Count; // allocated pages
 
         /// <summary>
@@ -402,7 +402,7 @@ namespace LiteDB.Engine
         {
             var counter = 0;
 
-            ENSURE(this.PagesInUse == 0, "must have no pages in use when call Clear() cache");
+            ENSURE(PagesInUse == 0, "must have no pages in use when call Clear() cache");
 
             foreach (var page in _readable.Values)
             {

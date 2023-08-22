@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
-using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -23,7 +19,7 @@ namespace LiteDB.Engine
         {
             var pageID = GetOption(options, "pageID");
 
-            return this.DumpPages(pageID == null ? null : (uint?)pageID.AsInt32);
+            return DumpPages(pageID == null ? null : (uint?)pageID.AsInt32);
         }
 
         private IEnumerable<BsonDocument> DumpPages(uint? pageID)

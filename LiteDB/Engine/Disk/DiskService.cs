@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -50,7 +46,7 @@ namespace LiteDB.Engine
             {
                 LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
-                this.Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
+                Initialize(_dataPool.Writer, settings.Collation, settings.InitialSize);
             }
 
             // if not readonly, force open writable datafile
@@ -215,7 +211,7 @@ namespace LiteDB.Engine
             if (settings.Password == password) return;
 
             // empty data file
-            this.SetLength(0, FileOrigin.Data);
+            SetLength(0, FileOrigin.Data);
 
             // close all streams
             _dataPool.Dispose();
@@ -252,7 +248,7 @@ namespace LiteDB.Engine
             try
             {
                 // get length before starts (avoid grow during loop)
-                var length = this.GetVirtualLength(origin);
+                var length = GetVirtualLength(origin);
 
                 stream.Position = 0;
 

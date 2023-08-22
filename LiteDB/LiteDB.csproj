@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
-    <NoWarn>1701;1702;1705;1591;0618</NoWarn>
+    <NoWarn></NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPublishable>False</IsPublishable>
     <Company />
@@ -24,6 +24,14 @@
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>HAVE_SHA1_MANAGED</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <WarningsAsErrors />
   </PropertyGroup>
   
   <!-- End References -->

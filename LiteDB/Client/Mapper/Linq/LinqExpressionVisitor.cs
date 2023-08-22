@@ -61,7 +61,7 @@ namespace LiteDB
 
         public BsonExpression Resolve(bool predicate)
         {
-            this.Visit(_expr);
+            Visit(_expr);
 
             ENSURE(_nodes.Count == 0, "node stack must be empty when finish expression resolve");
 
@@ -134,13 +134,13 @@ namespace LiteDB
             var member = node.Member;
 
             // special types contains method access: string.Length, DateTime.Day, ...
-            if (this.TryGetResolver(member.DeclaringType, out var type))
+            if (TryGetResolver(member.DeclaringType, out var type))
             {
                 var pattern = type.ResolveMember(member);
 
                 if (pattern == null) throw new NotSupportedException($"Member {member.Name} are not support in {member.DeclaringType.Name} when convert to BsonExpression ({node.ToString()}).");
 
-                this.ResolvePattern(pattern, node.Expression, new Expression[0]);
+                ResolvePattern(pattern, node.Expression, new Expression[0]);
             }
             else
             {
@@ -153,7 +153,7 @@ namespace LiteDB
 
                     if (isParam)
                     {
-                        var name = this.ResolveMember(member);
+                        var name = ResolveMember(member);
 
                         _builder.Append(name);
                     }
@@ -161,7 +161,7 @@ namespace LiteDB
                 // static member is not parameter expression - compile and execute as constant
                 else
                 {
-                    var value = this.Evaluate(node);
+                    var value = Evaluate(node);
 
                     base.Visit(Expression.Constant(value));
                 }
@@ -182,11 +182,11 @@ namespace LiteDB
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             // if special method for index access, eval index value (do not use parameters)
-            if (this.IsMethodIndexEval(node, out var obj, out var idx))
+            if (IsMethodIndexEval(node, out var obj, out var idx))
             {
-                this.Visit(obj);
+                Visit(obj);
 
-                var index = this.Evaluate(idx, typeof(string), typeof(int));
+                var index = Evaluate(idx, typeof(string), typeof(int));
 
                 if (index is string)
                 {
@@ -202,7 +202,7 @@ namespace LiteDB
             }
 
             // if not found in resolver, try run method
-            if (!this.TryGetResolver(node.Method.DeclaringType, out var type))
+            if (!TryGetResolver(node.Method.DeclaringType, out var type))
             {
                 // if method are called by parameter expression and it's not exists, throw error
                 var isParam = ParameterExpressionVisitor.Test(node);
@@ -210,7 +210,7 @@ namespace LiteDB
                 if (isParam) throw new NotSupportedException($"Method {node.Method.Name} not available to convert to BsonExpression ({node.ToString()}).");
 
                 // otherwise, try compile and execute
-                var value = this.Evaluate(node);
+                var value = Evaluate(node);
 
                 base.Visit(Expression.Constant(value));
 
@@ -223,7 +223,7 @@ namespace LiteDB
             if (pattern == null) throw new NotSupportedException($"Method {Reflection.MethodName(node.Method)} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
 
             // run pattern using object as # and args as @n
-            this.ResolvePattern(pattern, node.Object, node.Arguments);
+            ResolvePattern(pattern, node.Object, node.Arguments);
 
             return node;
         }
@@ -280,14 +280,14 @@ namespace LiteDB
                 if (node.Operand.NodeType == ExpressionType.MemberAccess)
                 {
                     _builder.Append("(");
-                    this.Visit(node.Operand);
+                    Visit(node.Operand);
                     _builder.Append(" = false)");
                 }
                 // otherwise, resolve all expression as inner expression = false
                 else
                 {
                     _builder.Append("(");
-                    this.Visit(node.Operand);
+                    Visit(node.Operand);
                     _builder.Append(")");
                     _builder.Append(" = false");
                 }
@@ -312,7 +312,7 @@ namespace LiteDB
 
                     var method = Expression.Call(null, convert, node.Operand);
 
-                    this.VisitMethodCall(method);
+                    VisitMethodCall(method);
                 }
                 else
                 {
@@ -322,7 +322,7 @@ namespace LiteDB
             else if (node.NodeType == ExpressionType.ArrayLength)
             {
                 _builder.Append("LENGTH(");
-                this.Visit(node.Operand);
+                Visit(node.Operand);
                 _builder.Append(")");
             }
             else
@@ -340,13 +340,13 @@ namespace LiteDB
         {
             if (node.Members == null)
             {
-                if (this.TryGetResolver(node.Type, out var type))
+                if (TryGetResolver(node.Type, out var type))
                 {
                     var pattern = type.ResolveCtor(node.Constructor);
 
                     if (pattern == null) throw new NotSupportedException($"Constructor for {node.Type.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
 
-                    this.ResolvePattern(pattern, null, node.Arguments);
+                    ResolvePattern(pattern, null, node.Arguments);
                 }
                 else
                 {
@@ -362,7 +362,7 @@ namespace LiteDB
                     var member = node.Members[i];
                     _builder.Append(i > 0 ? ", " : "");
                     _builder.AppendFormat("'{0}': ", member.Name);
-                    this.Visit(node.Arguments[i]);
+                    Visit(node.Arguments[i]);
                 }
 
                 _builder.Append(" }");
@@ -387,13 +387,13 @@ namespace LiteDB
             for (var i = 0; i < node.Bindings.Count; i++)
             {
                 var bind = node.Bindings[i] as MemberAssignment;
-                var member = this.ResolveMember(bind.Member);
+                var member = ResolveMember(bind.Member);
 
                 _builder.Append(i > 0 ? ", " : "");
                 _builder.Append(member.Substring(1));
                 _builder.Append(":");
 
-                this.Visit(bind.Expression);
+                Visit(bind.Expression);
             }
 
             _builder.Append("}");
@@ -411,7 +411,7 @@ namespace LiteDB
             for (var i = 0; i < node.Expressions.Count; i++)
             {
                 _builder.Append(i > 0 ? ", " : "");
-                this.Visit(node.Expressions[i]);
+                Visit(node.Expressions[i]);
             }
 
             _builder.Append(" ]");
@@ -427,14 +427,14 @@ namespace LiteDB
             var andOr = node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse;
 
             // special visitors
-            if (node.NodeType == ExpressionType.Coalesce) return this.VisitCoalesce(node);
-            if (node.NodeType == ExpressionType.ArrayIndex) return this.VisitArrayIndex(node);
+            if (node.NodeType == ExpressionType.Coalesce) return VisitCoalesce(node);
+            if (node.NodeType == ExpressionType.ArrayIndex) return VisitArrayIndex(node);
 
-            var op = this.GetOperator(node.NodeType);
+            var op = GetOperator(node.NodeType);
 
             _builder.Append("(");
 
-            this.VisitAsPredicate(node.Left, andOr);
+            VisitAsPredicate(node.Left, andOr);
 
             _builder.Append(op);
 
@@ -444,11 +444,11 @@ namespace LiteDB
                 unex.Operand.Type.GetTypeInfo().IsEnum &&
                 unex.Type == typeof(Int32))
             {
-                this.VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, this.Evaluate(node.Right))), andOr);
+                VisitAsPredicate(Expression.Constant(Enum.GetName(unex.Operand.Type, Evaluate(node.Right))), andOr);
             }
             else
             {
-                this.VisitAsPredicate(node.Right, andOr);
+                VisitAsPredicate(node.Right, andOr);
             }
 
             _builder.Append(")");
@@ -462,11 +462,11 @@ namespace LiteDB
         protected override Expression VisitConditional(ConditionalExpression node)
         {
             _builder.Append("IIF(");
-            this.Visit(node.Test);
+            Visit(node.Test);
             _builder.Append(", ");
-            this.Visit(node.IfTrue);
+            Visit(node.IfTrue);
             _builder.Append(", ");
-            this.Visit(node.IfFalse);
+            Visit(node.IfFalse);
             _builder.Append(")");
 
             return node;
@@ -478,9 +478,9 @@ namespace LiteDB
         private Expression VisitCoalesce(BinaryExpression node)
         {
             _builder.Append("COALESCE(");
-            this.Visit(node.Left);
+            Visit(node.Left);
             _builder.Append(", ");
-            this.Visit(node.Right);
+            Visit(node.Right);
             _builder.Append(")");
 
             return node;
@@ -491,10 +491,10 @@ namespace LiteDB
         /// </summary>
         private Expression VisitArrayIndex(BinaryExpression node)
         {
-            this.Visit(node.Left);
+            Visit(node.Left);
             _builder.Append("[");
             // index must be evaluated (must returns a constant)
-            var index = this.Evaluate(node.Right, typeof(int));
+            var index = Evaluate(node.Right, typeof(int));
             _builder.Append(index);
             _builder.Append("]");
 
@@ -515,18 +515,18 @@ namespace LiteDB
 
                 if (token.Type == TokenType.Hashtag)
                 {
-                    this.Visit(obj);
+                    Visit(obj);
                 }
                 else if (token.Type == TokenType.At && tokenizer.LookAhead(false).Type == TokenType.Int)
                 {
                     var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
 
-                    this.Visit(args[i]);
+                    Visit(args[i]);
                 }
                 else if (token.Type == TokenType.Percent)
                 {
                     // special ANY/ALL cases
-                    this.VisitEnumerablePredicate(args[1] as LambdaExpression);
+                    VisitEnumerablePredicate(args[1] as LambdaExpression);
                 }
                 else
                 {
@@ -548,11 +548,11 @@ namespace LiteDB
                 // requires only parameter in left side
                 if (bin.Left.NodeType != ExpressionType.Parameter) throw new LiteException(0, "Any/All requires simple parameter on left side. Eg: `x => x.Phones.Select(p => p.Number).Any(n => n > 5)`");
 
-                var op = this.GetOperator(bin.NodeType);
+                var op = GetOperator(bin.NodeType);
 
                 _builder.Append(op);
 
-                this.VisitAsPredicate(bin.Right, false);
+                VisitAsPredicate(bin.Right, false);
             }
             // Visit .Any(x => `x.StartsWith("John")`)
             else if (expression is MethodCallExpression met)
@@ -561,7 +561,7 @@ namespace LiteDB
                 if (met.Object.NodeType != ExpressionType.Parameter) throw new NotSupportedException("Any/All requires simple parameter on left side. Eg: `x.Customers.Select(c => c.Name).Any(n => n.StartsWith('J'))`");
 
                 // if not found in resolver, try run method
-                if (!this.TryGetResolver(met.Method.DeclaringType, out var type))
+                if (!TryGetResolver(met.Method.DeclaringType, out var type))
                 {
                     throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
                 }
@@ -572,7 +572,7 @@ namespace LiteDB
                 if (pattern == null || !pattern.StartsWith("#")) throw new NotSupportedException($"Method {met.Method.Name} not available to convert to BsonExpression inside Any/All call.");
 
                 // call resolve pattern removing first `#`
-                this.ResolvePattern(pattern.Substring(1), met.Object, met.Arguments);
+                ResolvePattern(pattern.Substring(1), met.Object, met.Arguments);
             }
             else
             {

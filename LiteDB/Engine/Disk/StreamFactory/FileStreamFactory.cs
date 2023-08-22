@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -38,7 +34,7 @@ namespace LiteDB.Engine
         {
             var write = canWrite && (_readonly == false);
 
-            var isNewFile = write && this.Exists() == false;
+            var isNewFile = write && Exists() == false;
 
             var stream = new FileStream(
                 _filename,
@@ -62,7 +58,7 @@ namespace LiteDB.Engine
         public long GetLength()
         {
             // if not file do not exists, returns 0
-            if (!this.Exists()) return 0;
+            if (!Exists()) return 0;
 
             // get physical file length from OS
             var length = new FileInfo(_filename).Length;
@@ -111,7 +107,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Test if this file are locked by another process
         /// </summary>
-        public bool IsLocked() => this.Exists() && FileHelper.IsFileLocked(_filename);
+        public bool IsLocked() => Exists() && FileHelper.IsFileLocked(_filename);
 
         /// <summary>
         /// Close all stream on end

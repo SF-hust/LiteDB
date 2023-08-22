@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -45,8 +37,8 @@ namespace LiteDB.Engine
                 _logStream.Value;
 
             var page = writable ?
-                _cache.GetWritablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf)) :
-                _cache.GetReadablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf));
+                _cache.GetWritablePage(position, origin, (pos, buf) => ReadStream(stream, pos, buf)) :
+                _cache.GetReadablePage(position, origin, (pos, buf) => ReadStream(stream, pos, buf));
 
             return page;
         }

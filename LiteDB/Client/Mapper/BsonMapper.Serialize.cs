@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -19,7 +17,7 @@ namespace LiteDB
             // if object is BsonDocument, just return them
             if (entity is BsonDocument) return (BsonDocument)(object)entity;
 
-            return this.Serialize(type, entity, 0).AsDocument;
+            return Serialize(type, entity, 0).AsDocument;
         }
 
         /// <summary>
@@ -27,7 +25,7 @@ namespace LiteDB
         /// </summary>
         public virtual BsonDocument ToDocument<T>(T entity)
         {
-            return this.ToDocument(typeof(T), entity)?.AsDocument;
+            return ToDocument(typeof(T), entity)?.AsDocument;
         }
 
         /// <summary>
@@ -35,7 +33,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Serialize<T>(T obj)
         {
-            return this.Serialize(typeof(T), obj, 0);
+            return Serialize(typeof(T), obj, 0);
         }
 
         /// <summary>
@@ -43,7 +41,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Serialize(Type type, object obj)
         {
-            return this.Serialize(type, obj, 0);
+            return Serialize(type, obj, 0);
         }
 
         internal BsonValue Serialize(Type type, object obj, int depth)
@@ -63,9 +61,9 @@ namespace LiteDB
             // test string - mapper has some special options
             else if (obj is String)
             {
-                var str = this.TrimWhitespace ? (obj as String).Trim() : (String)obj;
+                var str = TrimWhitespace ? (obj as String).Trim() : (String)obj;
 
-                if (this.EmptyStringToNull && str.Length == 0)
+                if (EmptyStringToNull && str.Length == 0)
                 {
                     return BsonValue.Null;
                 }
@@ -110,7 +108,7 @@ namespace LiteDB
             }
             else if (obj is Enum)
             {
-                if (this.EnumAsInteger)
+                if (EnumAsInteger)
                 {
                     return new BsonValue((int)obj);
                 }
@@ -130,17 +128,17 @@ namespace LiteDB
 
                 var itemType = type.GetTypeInfo().IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
 
-                return this.SerializeDictionary(itemType, dict, depth);
+                return SerializeDictionary(itemType, dict, depth);
             }
             // check if is a list or array
             else if (obj is IEnumerable)
             {
-                return this.SerializeArray(Reflection.GetListItemType(type), obj as IEnumerable, depth);
+                return SerializeArray(Reflection.GetListItemType(type), obj as IEnumerable, depth);
             }
             // otherwise serialize as a plain object
             else
             {
-                return this.SerializeObject(type, obj, depth);
+                return SerializeObject(type, obj, depth);
             }
         }
 
@@ -150,7 +148,7 @@ namespace LiteDB
 
             foreach (var item in array)
             {
-                arr.Add(this.Serialize(type, item, depth));
+                arr.Add(Serialize(type, item, depth));
             }
 
             return arr;
@@ -170,7 +168,7 @@ namespace LiteDB
                     skey = dateKey.ToString("o");
                 }
 
-                o[skey] = this.Serialize(type, value, depth);
+                o[skey] = Serialize(type, value, depth);
             }
 
             return o;
@@ -180,7 +178,7 @@ namespace LiteDB
         {
             var t = obj.GetType();
             var doc = new BsonDocument();
-            var entity = this.GetEntityMapper(t);
+            var entity = GetEntityMapper(t);
 
             // adding _type only where property Type is not same as object instance type
             if (type != t)
@@ -193,7 +191,7 @@ namespace LiteDB
                 // get member value
                 var value = member.Getter(obj);
 
-                if (value == null && this.SerializeNullValues == false && member.FieldName != "_id") continue;
+                if (value == null && SerializeNullValues == false && member.FieldName != "_id") continue;
 
                 // if member has a custom serialization, use it
                 if (member.Serialize != null)
@@ -202,7 +200,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    doc[member.FieldName] = this.Serialize(member.DataType, value, depth);
+                    doc[member.FieldName] = Serialize(member.DataType, value, depth);
                 }
             }
 

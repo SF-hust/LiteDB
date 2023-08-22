@@ -138,7 +138,7 @@ namespace LiteDB.Engine
             LOG($"disposing disk writer queue (with {_queue.Count} pages in queue)", "DISK");
 
             // run all items in queue before dispose
-            this.Wait();
+            Wait();
         }
     }
 }

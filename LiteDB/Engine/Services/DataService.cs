@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -28,7 +27,7 @@ namespace LiteDB.Engine
         /// </summary>
         public PageAddress Insert(BsonDocument doc)
         {
-            var bytesLeft = doc.GetBytesCount(true);
+            var bytesLeft = doc.CalcByteCount();
 
             if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
@@ -79,7 +78,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Update(CollectionPage col, PageAddress blockAddress, BsonDocument doc)
         {
-            var bytesLeft = doc.GetBytesCount(true);
+            var bytesLeft = doc.CalcByteCount();
 
             if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
@@ -140,7 +139,7 @@ namespace LiteDB.Engine
 
                     lastBlock.SetNextBlock(PageAddress.Empty);
 
-                    this.Delete(nextBlockAddress);
+                    Delete(nextBlockAddress);
                 }
             }
 

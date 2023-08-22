@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using static LiteDB.Constants;
 
@@ -49,7 +48,7 @@ namespace LiteDB.Engine
                 }
 
                 // rebuild entrie database using FileReader
-                this.RebuildContent(reader);
+                RebuildContent(reader);
 
                 // change password (can be a problem if any error occurs after here)
                 if (options != null)
@@ -104,7 +103,7 @@ namespace LiteDB.Engine
                     // first create all user indexes (exclude _id index)
                     foreach (var index in reader.GetIndexes(collection))
                     {
-                        this.EnsureIndex(collection,
+                        EnsureIndex(collection,
                             index.Name,
                             BsonExpression.Create(index.Expression),
                             index.Unique);
@@ -123,7 +122,7 @@ namespace LiteDB.Engine
                     {
                         transaction.Safepoint();
 
-                        this.InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
+                        InsertDocument(snapshot, doc, BsonAutoId.ObjectId, indexer, data);
                     }
                 }
 
