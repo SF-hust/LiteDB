@@ -358,7 +358,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int WriteDocument(BsonDocument value, bool recalc)
         {
-            var bytesCount = value.CalcByteCount(recalc);
+            var bytesCount = value.CalcByteCount();
 
             Write(bytesCount);
 
